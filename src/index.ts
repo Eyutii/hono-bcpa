@@ -2,6 +2,8 @@ import { Hono } from 'hono'
 
 const app = new Hono()
 
+
+
 type User = {
   id: string
   name: string
@@ -10,10 +12,6 @@ type User = {
 }
 
 const users: User[] = []
-
-app.get('/', (c) => {
-  return c.text('Hono Auth API is running')
-})
 
 app.get('/users', (c) => {
   return c.json(users)
@@ -32,16 +30,7 @@ app.get('/users/:id', (c) => {
 
 app.post('/signup', async (c) => {
   const body = await c.req.json()
-  const { name, email, password } = body
-
-  if (!name || !email || !password) {
-    return c.json(
-      { message: 'Name, email, and password are required' },
-      400
-    )
-  }
-
-  const existingUser = users.find((u) => u.email === email)
+  const existingUser = users.find((u) => u.email === body.email)
 
   if (existingUser) {
     return c.json(
@@ -52,9 +41,9 @@ app.post('/signup', async (c) => {
 
   const newUser: User = {
     id: crypto.randomUUID(),
-    name,
-    email,
-    password
+    name: body.name,
+    email: body.email,
+    password: body.password
   }
 
   users.push(newUser)
@@ -74,18 +63,12 @@ app.post('/signup', async (c) => {
 
 app.post('/signin', async (c) => {
   const body = await c.req.json()
-  const { email, password } = body
 
-  if (!email || !password) {
-    return c.json(
-      { message: 'Email and password are required' },
-      400
-    )
-  }
 
-  const user = users.find((u) => u.email === email)
 
-  if (!user || user.password !== password) {
+  const user = users.find((u) => u.email === body.email)
+
+  if (!user || user.password !== body.password) {
     return c.json({ message: 'Invalid credentials' }, 401)
   }
 
@@ -98,5 +81,4 @@ app.post('/signin', async (c) => {
     }
   })
 })
-
 export default app
